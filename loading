@@ -1,0 +1,758 @@
+repeat task.wait() until game:IsLoaded()
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local loadingGui = Instance.new("ScreenGui")
+loadingGui.Name = "LoadingGui"
+loadingGui.IgnoreGuiInset = true
+loadingGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+loadingGui.Parent = game.CoreGui
+
+local inputBlocker = Instance.new("Frame")
+inputBlocker.Name = "InputBlocker"
+inputBlocker.BackgroundTransparency = 1
+inputBlocker.Size = UDim2.fromScale(1, 1)
+inputBlocker.ZIndex = 1
+inputBlocker.Parent = loadingGui
+
+local function createTeleportEffect()
+	local teleportFrame = Instance.new("Frame")
+	teleportFrame.Name = "TeleportEffect"
+	teleportFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	teleportFrame.BackgroundTransparency = 1
+	teleportFrame.Size = UDim2.fromScale(1, 1)
+	teleportFrame.ZIndex = 10
+	teleportFrame.Parent = loadingGui
+	
+	local particleContainer = Instance.new("Frame")
+	particleContainer.Name = "ParticleContainer"
+	particleContainer.BackgroundTransparency = 1
+	particleContainer.Size = UDim2.fromScale(1, 1)
+	particleContainer.Parent = teleportFrame
+	
+	for i = 1, 150 do
+		local particle = Instance.new("Frame")
+		particle.Name = "Particle"
+		particle.BackgroundColor3 = Color3.fromRGB(41, 128, 255)
+		particle.BorderSizePixel = 0
+		
+		local size = math.random(2, 6)
+		particle.Size = UDim2.fromOffset(size, size)
+		
+		local xPos = math.random(0, 1000) / 1000
+		local yPos = math.random(0, 1000) / 1000
+		particle.Position = UDim2.fromScale(xPos, yPos)
+		
+		particle.BackgroundTransparency = math.random(0, 7) / 10
+		particle.ZIndex = 11
+		particle.Parent = particleContainer
+	end
+	
+	local overlay = Instance.new("Frame")
+	overlay.Name = "Overlay"
+	overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	overlay.BackgroundTransparency = 1
+	overlay.Size = UDim2.fromScale(1, 1)
+	overlay.ZIndex = 12
+	overlay.Parent = teleportFrame
+	
+	return teleportFrame
+end
+
+local function createLaunchScreen()
+	local launchFrame = Instance.new("Frame")
+	launchFrame.Name = "LaunchScreen"
+	launchFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+	launchFrame.Size = UDim2.fromScale(1, 1)
+	launchFrame.Visible = false
+	launchFrame.ZIndex = 15
+	launchFrame.Parent = loadingGui
+	
+	local uiGradient = Instance.new("UIGradient")
+	uiGradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(30, 30, 40)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 20))
+	})
+	uiGradient.Rotation = 45
+	uiGradient.Parent = launchFrame
+	
+	local titleLabel = Instance.new("TextLabel")
+	titleLabel.Name = "Title"
+	titleLabel.BackgroundTransparency = 1
+	titleLabel.Position = UDim2.fromScale(0.5, 0.4)
+	titleLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+	titleLabel.Size = UDim2.fromScale(0.8, 0.2)
+	titleLabel.Font = Enum.Font.GothamBold
+	titleLabel.Text = "Blox Fruits Script"
+	titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+	titleLabel.TextScaled = true
+	titleLabel.TextTransparency = 1
+	titleLabel.ZIndex = 16
+	titleLabel.Parent = launchFrame
+	
+	local launchButton = Instance.new("TextButton")
+	launchButton.Name = "LaunchButton"
+	launchButton.AnchorPoint = Vector2.new(0.5, 0.5)
+	launchButton.BackgroundColor3 = Color3.fromRGB(41, 128, 255)
+	launchButton.Position = UDim2.fromScale(0.5, 0.6)
+	launchButton.Size = UDim2.fromOffset(200, 50)
+	launchButton.Font = Enum.Font.GothamSemibold
+	launchButton.Text = "Launch Script."
+	launchButton.TextColor3 = Color3.fromRGB(0, 255, 255)
+	launchButton.TextScaled = true
+	launchButton.TextTransparency = 1
+	launchButton.AutoButtonColor = false
+	launchButton.ZIndex = 16
+	launchButton.Parent = launchFrame
+	
+	local buttonCorner = Instance.new("UICorner")
+	buttonCorner.CornerRadius = UDim.new(0, 10)
+	buttonCorner.Parent = launchButton
+	
+	local buttonGlow = Instance.new("UIStroke")
+	buttonGlow.Color = Color3.fromRGB(65, 143, 255)
+	buttonGlow.Thickness = 2
+	buttonGlow.Parent = launchButton
+	
+	local buttonGradient = Instance.new("UIGradient")
+	buttonGradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(65, 143, 255)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(41, 128, 255))
+	})
+	buttonGradient.Rotation = 90
+	buttonGradient.Parent = launchButton
+	
+	return launchFrame, launchButton
+end
+
+local function createHelperBot()
+	local helperContainer = Instance.new("Frame")
+	helperContainer.Name = "HelperBot"
+	helperContainer.BackgroundTransparency = 1
+	helperContainer.Size = UDim2.fromScale(1, 1)
+	helperContainer.Visible = false
+	helperContainer.ZIndex = 20
+	helperContainer.Parent = loadingGui
+	
+	local background = Instance.new("Frame")
+	background.Name = "Background"
+	background.BackgroundColor3 = Color3.fromRGB(10, 10, 15)
+	background.Size = UDim2.fromScale(1, 1)
+	background.ZIndex = 21
+	background.Parent = helperContainer
+	
+	local backgroundGradient = Instance.new("UIGradient")
+	backgroundGradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 30)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(15, 15, 25)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 10, 15))
+	})
+	backgroundGradient.Rotation = 45
+	backgroundGradient.Parent = background
+	
+	local backgroundPattern = Instance.new("ImageLabel")
+	backgroundPattern.Name = "BackgroundPattern"
+	backgroundPattern.BackgroundTransparency = 1
+	backgroundPattern.Size = UDim2.fromScale(1, 1)
+	backgroundPattern.Image = "rbxassetid://8804216353"
+	backgroundPattern.ImageColor3 = Color3.fromRGB(30, 100, 210)
+	backgroundPattern.ImageTransparency = 0.9
+	backgroundPattern.ScaleType = Enum.ScaleType.Tile
+	backgroundPattern.TileSize = UDim2.fromOffset(200, 200)
+	backgroundPattern.ZIndex = 22
+	backgroundPattern.Parent = background
+
+	local discordButton = Instance.new("TextButton")
+    discordButton.Name = "DiscordButton"
+    discordButton.AnchorPoint = Vector2.new(0.5, 0.5)
+    discordButton.BackgroundColor3 = Color3.fromRGB(88, 101, 242) -- Discord blue color
+    discordButton.Position = UDim2.new(0.5, 0, 0.9, 0)
+    discordButton.Size = UDim2.fromOffset(200, 40)
+    discordButton.Font = Enum.Font.GothamSemibold
+    discordButton.Text = "Join Discord"
+    discordButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    discordButton.TextSize = 16
+    discordButton.TextTransparency = 1
+    discordButton.AutoButtonColor = false
+    discordButton.ZIndex = 26
+    discordButton.Parent = helperContainer
+    
+    local discordCorner = Instance.new("UICorner")
+    discordCorner.CornerRadius = UDim.new(0, 8)
+    discordCorner.Parent = discordButton
+    
+    local discordStroke = Instance.new("UIStroke")
+    discordStroke.Color = Color3.fromRGB(107, 118, 255)
+    discordStroke.Thickness = 2
+    discordStroke.Parent = discordButton
+    
+    local discordIcon = Instance.new("ImageLabel")
+    discordIcon.Name = "DiscordIcon"
+    discordIcon.BackgroundTransparency = 1
+    discordIcon.Size = UDim2.fromOffset(24, 24)
+    discordIcon.Position = UDim2.new(0, 10, 0.5, 0)
+    discordIcon.AnchorPoint = Vector2.new(0, 0.5)
+    discordIcon.Image = "rbxassetid://10367063073"
+    discordIcon.ImageTransparency = 1
+    discordIcon.ZIndex = 27
+    discordIcon.Parent = discordButton
+	
+	local titleContainer = Instance.new("Frame")
+	titleContainer.Name = "TitleContainer"
+	titleContainer.BackgroundTransparency = 1
+	titleContainer.Size = UDim2.new(1, 0, 0.1, 0)
+	titleContainer.Position = UDim2.new(0, 0, 0.05, 0)
+	titleContainer.ZIndex = 25
+	titleContainer.Parent = helperContainer
+	
+	local titleLabel = Instance.new("TextLabel")
+	titleLabel.Name = "TitleLabel"
+	titleLabel.BackgroundTransparency = 1
+	titleLabel.Size = UDim2.new(0.8, 0, 1, 0)
+	titleLabel.Position = UDim2.new(0.1, 0, 0, 0)
+	titleLabel.Font = Enum.Font.GothamBold
+	titleLabel.Text = "FINAL LOADING & TUTORIAL"
+	titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+	titleLabel.TextSize = 28
+	titleLabel.TextTransparency = 1
+	titleLabel.ZIndex = 26
+	titleLabel.Parent = titleContainer
+	
+	local titleUnderline = Instance.new("Frame")
+	titleUnderline.Name = "TitleUnderline"
+	titleUnderline.BackgroundColor3 = Color3.fromRGB(30, 100, 210)
+	titleUnderline.Position = UDim2.new(0.3, 0, 1, 5)
+	titleUnderline.Size = UDim2.new(0.4, 0, 0, 2)
+	titleUnderline.BorderSizePixel = 0
+	titleUnderline.ZIndex = 26
+	titleUnderline.Parent = titleContainer
+	
+	local titleGlow = Instance.new("UIGradient")
+	titleGlow.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(50, 150, 255)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(30, 100, 210)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(50, 150, 255))
+	})
+	titleGlow.Parent = titleUnderline
+	
+	local botImage = Instance.new("ImageLabel")
+	botImage.Name = "BotHead"
+	botImage.BackgroundTransparency = 1
+	botImage.Size = UDim2.fromOffset(120, 120)
+	botImage.AnchorPoint = Vector2.new(0.5, 0.5)
+	botImage.Position = UDim2.new(0.2, 0, 0.4, 0)
+	botImage.Image = "rbxassetid://8313188867"
+	botImage.ImageTransparency = 1
+	botImage.ZIndex = 23
+	botImage.Parent = helperContainer
+	
+	local chatBubble = Instance.new("Frame")
+	chatBubble.Name = "ChatBubble"
+	chatBubble.BackgroundColor3 = Color3.fromRGB(30, 100, 210)
+	chatBubble.AnchorPoint = Vector2.new(0, 0.5)
+	chatBubble.Position = UDim2.new(0.35, 0, 0.4, 0)
+	chatBubble.Size = UDim2.new(0.5, 0, 0.25, 0)
+	chatBubble.BorderSizePixel = 0
+	chatBubble.ZIndex = 22
+	chatBubble.Parent = helperContainer
+	
+	local bubbleCorner = Instance.new("UICorner")
+	bubbleCorner.CornerRadius = UDim.new(0, 12)
+	bubbleCorner.Parent = chatBubble
+	
+	local bubbleStroke = Instance.new("UIStroke")
+	bubbleStroke.Color = Color3.fromRGB(50, 120, 230)
+	bubbleStroke.Thickness = 2
+	bubbleStroke.Parent = chatBubble
+	
+	local bubbleGradient = Instance.new("UIGradient")
+	bubbleGradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(50, 120, 230)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(30, 100, 210))
+	})
+	bubbleGradient.Rotation = 45
+	bubbleGradient.Parent = chatBubble
+	
+	local bubbleArrow = Instance.new("Frame")
+	bubbleArrow.Name = "BubbleArrow"
+	bubbleArrow.BackgroundColor3 = Color3.fromRGB(30, 100, 210)
+	bubbleArrow.BorderSizePixel = 0
+	bubbleArrow.AnchorPoint = Vector2.new(1, 0.5)
+	bubbleArrow.Position = UDim2.new(0, 0, 0.5, 0)
+	bubbleArrow.Size = UDim2.fromOffset(20, 20)
+	bubbleArrow.ZIndex = 22
+	bubbleArrow.Rotation = 45
+	bubbleArrow.Parent = chatBubble
+	
+	local arrowGradient = Instance.new("UIGradient")
+	arrowGradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(50, 120, 230)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(30, 100, 210))
+	})
+	arrowGradient.Rotation = 45
+	arrowGradient.Parent = bubbleArrow
+	
+	local chatPanel = Instance.new("Frame")
+	chatPanel.Name = "ChatPanel"
+	chatPanel.BackgroundTransparency = 1
+	chatPanel.AnchorPoint = Vector2.new(0.5, 0.5)
+	chatPanel.Position = UDim2.new(0.5, 0, 0.5, 0)
+	chatPanel.Size = UDim2.new(0.95, 0, 0.9, 0)
+	chatPanel.ZIndex = 23
+	chatPanel.Parent = chatBubble
+	
+	local textLabel = Instance.new("TextLabel")
+	textLabel.Name = "BotText"
+	textLabel.BackgroundTransparency = 1
+	textLabel.Size = UDim2.new(1, 0, 1, 0)
+	textLabel.Font = Enum.Font.Gotham
+	textLabel.Text = ""
+	textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+	textLabel.TextSize = 16
+	textLabel.TextWrapped = true
+	textLabel.TextXAlignment = Enum.TextXAlignment.Left
+	textLabel.TextYAlignment = Enum.TextYAlignment.Top
+	textLabel.ZIndex = 24
+	textLabel.Parent = chatPanel
+	
+	local loadingBar = Instance.new("Frame")
+	loadingBar.Name = "LoadingBar"
+	loadingBar.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+	loadingBar.Position = UDim2.new(0.25, 0, 0.8, 0)
+	loadingBar.Size = UDim2.new(0.5, 0, 0.04, 0)
+	loadingBar.ZIndex = 22
+	loadingBar.Parent = helperContainer
+	
+	local barCorner = Instance.new("UICorner")
+	barCorner.CornerRadius = UDim.new(1, 0)
+	barCorner.Parent = loadingBar
+	
+	local barStroke = Instance.new("UIStroke")
+	barStroke.Color = Color3.fromRGB(50, 120, 230)
+	barStroke.Thickness = 1
+	barStroke.Parent = loadingBar
+	
+	local progressBar = Instance.new("Frame")
+	progressBar.Name = "ProgressBar"
+	progressBar.BackgroundColor3 = Color3.fromRGB(30, 100, 210)
+	progressBar.Size = UDim2.new(0, 0, 1, 0)
+	progressBar.BorderSizePixel = 0
+	progressBar.ZIndex = 23
+	progressBar.Parent = loadingBar
+	
+	local progressBarCorner = Instance.new("UICorner")
+	progressBarCorner.CornerRadius = UDim.new(1, 0)
+	progressBarCorner.Parent = progressBar
+	
+	local progressGradient = Instance.new("UIGradient")
+	progressGradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(50, 180, 255)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(30, 100, 210)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(50, 120, 230))
+	})
+	progressGradient.Rotation = 90
+	progressGradient.Parent = progressBar
+	
+	local percentLabel = Instance.new("TextLabel")
+	percentLabel.Name = "PercentLabel"
+	percentLabel.BackgroundTransparency = 1
+	percentLabel.AnchorPoint = Vector2.new(0, 0.5)
+	percentLabel.Size = UDim2.new(0.1, 0, 1, 0)
+	percentLabel.Position = UDim2.new(1.05, 0, 0.5, 0)
+	percentLabel.Font = Enum.Font.GothamSemibold
+	percentLabel.Text = "0%"
+	percentLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+	percentLabel.TextSize = 14
+	percentLabel.ZIndex = 23
+	percentLabel.Parent = loadingBar
+	
+	return helperContainer, botImage, textLabel, progressBar, percentLabel, titleLabel, discordButton, discordIcon
+end
+
+local function typewriterEffect(textLabel, text, speed)
+	task.spawn(function()
+		textLabel.Text = ""
+
+		for i = 1, #text do
+			textLabel.Text = string.sub(text, 1, i)
+			task.wait(speed)
+		end
+	end)
+end
+
+local function animateParticles(particleContainer)
+	local particles = particleContainer:GetChildren()
+	local tweens = {}
+	
+	for _, particle in ipairs(particles) do
+		local destinationX = math.random(-100, 100) / 100 + particle.Position.X.Scale
+		local destinationY = math.random(-100, 100) / 100 + particle.Position.Y.Scale
+		
+		local tweenInfo = TweenInfo.new(
+			math.random(15, 30) / 10,
+			Enum.EasingStyle.Linear,
+			Enum.EasingDirection.InOut,
+			-1,
+			true
+		)
+		
+		local goal = {
+			Position = UDim2.fromScale(
+				math.clamp(destinationX, 0, 1),
+				math.clamp(destinationY, 0, 1)
+			)
+		}
+		
+		local tween = TweenService:Create(particle, tweenInfo, goal)
+		table.insert(tweens, tween)
+		tween:Play()
+	end
+	
+	return tweens
+end
+
+local function createFloatingParticles(container)
+	for i = 1, 40 do
+		local particle = Instance.new("Frame")
+		particle.Name = "FloatingParticle"
+		particle.BackgroundColor3 = Color3.fromRGB(30, 100, 210)
+		particle.BorderSizePixel = 0
+		
+		local size = math.random(2, 8)
+		particle.Size = UDim2.fromOffset(size, size)
+		
+		local xPos = math.random(0, 1000) / 1000
+		local yPos = math.random(0, 1000) / 1000
+		particle.Position = UDim2.fromScale(xPos, yPos)
+		
+		particle.BackgroundTransparency = math.random(7, 9) / 10
+		particle.ZIndex = 22
+		
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(1, 0)
+		corner.Parent = particle
+		
+		particle.Parent = container
+		
+		local tweenInfo = TweenInfo.new(
+			math.random(10, 20),
+			Enum.EasingStyle.Linear,
+			Enum.EasingDirection.InOut,
+			-1,
+			true
+		)
+		
+		local goal = {
+			Position = UDim2.fromScale(
+				math.clamp(xPos + math.random(-30, 30) / 100, 0, 1),
+				math.clamp(yPos + math.random(-30, 30) / 100, 0, 1)
+			)
+		}
+		
+		TweenService:Create(particle, tweenInfo, goal):Play()
+	end
+end
+
+local function runLoadingSequence()
+	local teleportEffect = createTeleportEffect()
+	local launchFrame, launchButton = createLaunchScreen()
+	local helperContainer, botImage, textLabel, progressBar, percentLabel, titleLabel, discordButton, discordIcon = createHelperBot()
+	
+	local particleTweens = animateParticles(teleportEffect.ParticleContainer)
+	
+	TweenService:Create(teleportEffect, TweenInfo.new(1), {BackgroundTransparency = 0}):Play()
+	
+	task.wait(1)
+	
+	TweenService:Create(teleportEffect.Overlay, TweenInfo.new(2), {BackgroundTransparency = 0}):Play()
+	
+	task.wait(3)
+	
+	for _, tween in ipairs(particleTweens) do
+		tween:Cancel()
+	end
+	
+	teleportEffect.Visible = false
+	launchFrame.Visible = true
+	
+	TweenService:Create(launchFrame, TweenInfo.new(1), {BackgroundTransparency = 0}):Play()
+	task.wait(0.5)
+	TweenService:Create(launchFrame.Title, TweenInfo.new(1), {TextTransparency = 0}):Play()
+	task.wait(0.5)
+	TweenService:Create(launchButton, TweenInfo.new(1), {TextTransparency = 0}):Play()
+	
+	local buttonHover = false
+	
+	launchButton.MouseEnter:Connect(function()
+		buttonHover = true
+		TweenService:Create(launchButton, TweenInfo.new(0.3), {Size = UDim2.fromOffset(220, 55)}):Play()
+	end)
+	
+	launchButton.MouseLeave:Connect(function()
+		buttonHover = false
+		TweenService:Create(launchButton, TweenInfo.new(0.3), {Size = UDim2.fromOffset(200, 50)}):Play()
+	end)
+	
+	task.spawn(function()
+		while task.wait(0.05) do
+			if not launchButton.Parent then break end
+			
+			launchButton.Rotation = math.sin(tick() * 2) * 0.5
+			
+			if buttonHover then
+				buttonGlow = launchButton:FindFirstChildOfClass("UIStroke")
+				if buttonGlow then
+					buttonGlow.Thickness = 2 + math.sin(tick() * 5) * 1
+				end
+			end
+		end
+	end)
+	
+	local botMessages = {
+		"Hello there! I'm helper bot! I'll guide you how to use the script properly, so you won't have issues. As well, the script is doing final loading stages, to make sure It's working perfectly and you can use script safely! As well, it's required to bypass Anti-Cheat - So you won't get banned! Please, Do NOT leave the game while It's loading - Or it could result in potential data loss!",
+		"This script has been optimized for performance and ease of use. Let me show you how to make the most of it.",
+		"First, let's talk about the key features. You'll find everything neatly organized in the main menu.",
+		"The script includes several powerful tools that will help you accomplish your tasks efficiently.",
+		"Make sure to check out the settings menu where you can customize everything to your liking.",
+		"The script automatically saves your preferences, so you don't have to reconfigure everything each time.",
+		"I've implemented several optimization techniques to ensure smooth performance on all devices.",
+		"The user interface has been designed to be intuitive and responsive, making navigation a breeze.",
+		"Security features have been integrated to protect your data and ensure privacy.",
+		"You can customize the appearance with various themes available in the settings menu.",
+		"Advanced users can access additional features through the developer panel.",
+		"Remember that you can always come back to the tutorial section if you need a refresher on how things work.",
+		"I recommend starting with the basic functions before moving on to the more advanced features.",
+		"Regular updates will be provided to enhance functionality and fix any issues.",
+		"That's all for now! You're all set to begin. If you need any help, just look for my icon in the help section."
+	}
+	
+	local botPositions = {
+		UDim2.new(0.2, 0, 0.4, 0),
+		UDim2.new(0.18, 0, 0.35, 0),
+		UDim2.new(0.22, 0, 0.45, 0),
+		UDim2.new(0.2, 0, 0.4, 0),
+		UDim2.new(0.18, 0, 0.35, 0),
+		UDim2.new(0.22, 0, 0.45, 0),
+		UDim2.new(0.2, 0, 0.4, 0),
+		UDim2.new(0.18, 0, 0.35, 0),
+		UDim2.new(0.22, 0, 0.45, 0),
+		UDim2.new(0.2, 0, 0.4, 0),
+		UDim2.new(0.18, 0, 0.35, 0),
+		UDim2.new(0.22, 0, 0.45, 0),
+		UDim2.new(0.2, 0, 0.4, 0),
+		UDim2.new(0.18, 0, 0.35, 0),
+		UDim2.new(0.22, 0, 0.45, 0)
+	}
+	
+	launchButton.MouseButton1Click:Connect(function()
+		TweenService:Create(launchButton, TweenInfo.new(0.2), {Size = UDim2.fromOffset(190, 45)}):Play()
+		task.wait(0.1)
+		TweenService:Create(launchButton, TweenInfo.new(0.2), {Size = UDim2.fromOffset(200, 50)}):Play()
+		
+		task.wait(0.3)
+		
+		TweenService:Create(launchFrame.Title, TweenInfo.new(0.7), {TextTransparency = 1}):Play()
+		TweenService:Create(launchButton, TweenInfo.new(0.7), {TextTransparency = 1}):Play()
+		
+		task.wait(1)
+		launchFrame.Visible = false
+		helperContainer.Visible = true
+		
+		createFloatingParticles(helperContainer)
+		
+		TweenService:Create(botImage, TweenInfo.new(1), {
+			ImageTransparency = 0,
+			Position = botPositions[1],
+			Size = UDim2.fromOffset(120, 120)
+		}):Play()
+		
+		TweenService:Create(helperContainer.TitleContainer.TitleLabel, TweenInfo.new(1), {
+			TextTransparency = 0
+		}):Play()
+
+		TweenService:Create(discordButton, TweenInfo.new(1), {
+			TextTransparency = 0
+		}):Play()
+		
+		TweenService:Create(discordIcon, TweenInfo.new(1), {
+			ImageTransparency = 0
+		}):Play()
+		
+		discordButton.MouseEnter:Connect(function()
+			TweenService:Create(discordButton, TweenInfo.new(0.3), {
+				Size = UDim2.fromOffset(210, 45),
+				BackgroundColor3 = Color3.fromRGB(107, 118, 255)
+			}):Play()
+		end)
+		
+		discordButton.MouseLeave:Connect(function()
+			TweenService:Create(discordButton, TweenInfo.new(0.3), {
+				Size = UDim2.fromOffset(200, 40),
+				BackgroundColor3 = Color3.fromRGB(88, 101, 242)
+			}):Play()
+		end)
+		
+		discordButton.MouseButton1Click:Connect(function()
+			local inviteLink = "https://discord.gg/6wFCr9P4Zr"
+			
+			pcall(function()
+				setclipboard(inviteLink)
+			end)
+			
+			discordButton.Text = "Copied to clipboard!"
+			TweenService:Create(discordButton, TweenInfo.new(0.2), {
+				Size = UDim2.fromOffset(190, 35)
+			}):Play()
+			
+			task.wait(0.1)
+			TweenService:Create(discordButton, TweenInfo.new(0.2), {
+				Size = UDim2.fromOffset(200, 40)
+			}):Play()
+			
+			task.wait(2)
+			discordButton.Text = "Join Discord"
+		end)
+		
+		task.wait(1)
+		
+		local totalDuration = 300
+		local messageDuration = totalDuration / #botMessages
+		local progress = 0
+		
+		local function updateChatBubblePosition(botPos)
+			return UDim2.new(
+				botPos.X.Scale + 0.15, 
+				0, 
+				botPos.Y.Scale, 
+				0
+			)
+		end
+		
+		for i, message in ipairs(botMessages) do
+			local newPosition = botPositions[i]
+			
+			local floatTween = TweenService:Create(botImage, TweenInfo.new(0.8, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+				Position = newPosition
+			})
+			floatTween:Play()
+			
+			local bubblePos = updateChatBubblePosition(newPosition)
+			TweenService:Create(helperContainer.ChatBubble, TweenInfo.new(0.8, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+				Position = bubblePos
+			}):Play()
+			
+			task.wait(0.8)
+			
+			typewriterEffect(textLabel, message, 0.02)
+			
+			task.spawn(function()
+				local startTime = tick()
+				local animDuration = messageDuration - 2
+				
+				while tick() - startTime < animDuration do
+					local offset = math.sin(tick() * 2) * 3
+					TweenService:Create(botImage, TweenInfo.new(0.1), {
+						Position = UDim2.new(newPosition.X.Scale, offset, newPosition.Y.Scale, math.abs(offset/2))
+					}):Play()
+					task.wait(0.1)
+				end
+				
+				TweenService:Create(botImage, TweenInfo.new(0.3), {
+					Position = newPosition
+				}):Play()
+			end)
+			
+			local startProgress = progress
+			local endProgress = i / #botMessages
+			local progressUpdateInterval = 1
+			local progressSteps = messageDuration / progressUpdateInterval
+			
+			for j = 1, progressSteps do
+				progress = startProgress + (endProgress - startProgress) * (j / progressSteps)
+				TweenService:Create(progressBar, TweenInfo.new(0.2), {
+					Size = UDim2.fromScale(progress, 1)
+				}):Play()
+				percentLabel.Text = math.floor(progress * 100) .. "%"
+				task.wait(progressUpdateInterval)
+			end
+			
+			if i < #botMessages then
+				TweenService:Create(textLabel, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
+				task.wait(0.5)
+				textLabel.Text = ""
+				TweenService:Create(textLabel, TweenInfo.new(0.5), {TextTransparency = 0}):Play()
+				task.wait(0.5)
+			end
+		end
+		
+		task.wait(1)
+		
+		TweenService:Create(botImage, TweenInfo.new(1), {
+			ImageTransparency = 1,
+			Position = UDim2.new(botImage.Position.X.Scale, -120, botImage.Position.Y.Scale, 0)
+		}):Play()
+		
+		TweenService:Create(helperContainer.ChatBubble, TweenInfo.new(1), {
+			BackgroundTransparency = 1,
+			Position = UDim2.new(helperContainer.ChatBubble.Position.X.Scale + 0.2, 0, helperContainer.ChatBubble.Position.Y.Scale, 0)
+		}):Play()
+		
+		TweenService:Create(helperContainer.ChatBubble.BubbleArrow, TweenInfo.new(1), {
+			BackgroundTransparency = 1
+		}):Play()
+		
+		TweenService:Create(textLabel, TweenInfo.new(1), {TextTransparency = 1}):Play()
+		
+		TweenService:Create(helperContainer.LoadingBar, TweenInfo.new(1), {
+			BackgroundTransparency = 1
+		}):Play()
+		
+		TweenService:Create(progressBar, TweenInfo.new(1), {
+			BackgroundTransparency = 1
+		}):Play()
+		
+		TweenService:Create(percentLabel, TweenInfo.new(1), {
+			TextTransparency = 1
+		}):Play()
+
+		TweenService:Create(discordButton, TweenInfo.new(1), {
+			TextTransparency = 1
+		}):Play()
+		
+		TweenService:Create(discordIcon, TweenInfo.new(1), {
+			ImageTransparency = 1
+		}):Play()
+		
+		task.wait(1.5)
+		
+		local finalFade = Instance.new("Frame")
+		finalFade.Name = "FinalFade"
+		finalFade.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+		finalFade.BackgroundTransparency = 1
+		finalFade.Size = UDim2.fromScale(1, 1)
+		finalFade.ZIndex = 100
+		finalFade.Parent = loadingGui
+		
+		TweenService:Create(finalFade, TweenInfo.new(1), {BackgroundTransparency = 0}):Play()
+		
+		task.wait(1.5)
+		
+		loadingGui:Destroy()
+	end)
+end
+
+local function initializeConnection()
+	local renderSteppedConn = nil
+	
+	renderSteppedConn = RunService.RenderStepped:Connect(function()
+		renderSteppedConn:Disconnect()
+		runLoadingSequence()
+	end)
+end
+
+initializeConnection()
